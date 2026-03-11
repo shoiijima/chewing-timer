@@ -86,7 +86,7 @@ function App() {
       case 'lift':
         return '口に運ぶ'
       case 'chew':
-        return '咀嚼'
+        return '噛む'
       default:
         return 'スタンバイ'
     }
@@ -143,7 +143,7 @@ function App() {
                 </div>
               </div>
               <div className="input-group">
-                <label>咀嚼</label>
+                <label>噛む</label>
                 <div className="input-control">
                   <button onClick={() => setChewTime(Math.max(1, chewTime - 1))}>−</button>
                   <span className="input-value">{chewTime}s</span>

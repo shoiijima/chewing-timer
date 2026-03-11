@@ -4,16 +4,39 @@ import './App.css'
 type Phase = 'idle' | 'lift' | 'chew'
 
 const TICK_INTERVAL = 50 // ms for smooth animation
+const STORAGE_KEY = 'chewing-timer-settings'
+
+function getInitialSettings() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY)
+    if (saved) {
+      const { liftTime, chewTime } = JSON.parse(saved)
+      return {
+        liftTime: typeof liftTime === 'number' ? liftTime : 5,
+        chewTime: typeof chewTime === 'number' ? chewTime : 30,
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return { liftTime: 5, chewTime: 30 }
+}
 
 function App() {
-  const [liftTime, setLiftTime] = useState(5)
-  const [chewTime, setChewTime] = useState(30)
+  const initialSettings = getInitialSettings()
+  const [liftTime, setLiftTime] = useState(initialSettings.liftTime)
+  const [chewTime, setChewTime] = useState(initialSettings.chewTime)
   const [isRunning, setIsRunning] = useState(false)
   const [currentPhase, setCurrentPhase] = useState<Phase>('idle')
   const [timeLeft, setTimeLeft] = useState(0)
   const [cycleCount, setCycleCount] = useState(0)
   const [elapsedTime, setElapsedTime] = useState(0)
   const lastTickRef = useRef<number>(0)
+
+  // 設定値をlocalStorageに保存
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ liftTime, chewTime }))
+  }, [liftTime, chewTime])
 
   const totalTime = currentPhase === 'lift' ? liftTime : chewTime
   const progress = totalTime > 0 ? ((totalTime - timeLeft) / totalTime) * 100 : 0

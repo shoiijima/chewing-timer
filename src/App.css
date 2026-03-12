@@ -49,6 +49,10 @@
   stroke: #10b981;
 }
 
+.timer-container.finishing .progress-ring-fill {
+  stroke: #f59e0b;
+}
+
 .timer-display {
   position: absolute;
   top: 50%;
@@ -67,6 +71,7 @@
   letter-spacing: 0.1em;
   color: rgba(255, 255, 255, 0.5);
   transition: color 0.5s ease;
+  text-align: center;
 }
 
 .timer-container.lift .phase-label {
@@ -77,11 +82,110 @@
   color: #10b981;
 }
 
+.timer-container.finishing .phase-label {
+  color: #f59e0b;
+}
+
+.finishing-message {
+  font-size: 0.75rem;
+  color: #f59e0b;
+  margin-top: 8px;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}
+
 .time-left {
   font-size: 4rem;
   font-weight: 200;
   line-height: 1;
   font-variant-numeric: tabular-nums;
+}
+
+.time-adjust-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.time-adjust-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.time-adjust-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.time-adjust-btn:active {
+  transform: scale(0.9);
+}
+
+@media (prefers-color-scheme: light) {
+  .time-adjust-btn {
+    background: rgba(0, 0, 0, 0.06);
+    color: rgba(0, 0, 0, 0.5);
+  }
+
+  .time-adjust-btn:hover {
+    background: rgba(0, 0, 0, 0.1);
+    color: #000;
+  }
+}
+
+/* Current Settings Display */
+.current-settings {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  font-size: 0.8rem;
+}
+
+.setting-item {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.setting-divider {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+@media (prefers-color-scheme: light) {
+  .current-settings {
+    background: rgba(0, 0, 0, 0.04);
+  }
+
+  .setting-item {
+    color: rgba(0, 0, 0, 0.5);
+  }
+
+  .setting-divider {
+    color: rgba(0, 0, 0, 0.2);
+  }
 }
 
 .cycle-count {
@@ -160,6 +264,12 @@
 }
 
 /* Play Button */
+.button-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
 .play-button {
   width: 64px;
   height: 64px;
@@ -197,6 +307,52 @@
 .timer-container.chew .play-button {
   background: linear-gradient(135deg, #10b981, #059669);
   box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
+}
+
+.timer-container.finishing .play-button {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  box-shadow: 0 4px 20px rgba(245, 158, 11, 0.4);
+}
+
+/* Stop Button */
+.stop-button {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stop-button:hover {
+  background: rgba(239, 68, 68, 0.8);
+  color: white;
+}
+
+.stop-button:active {
+  transform: scale(0.95);
+}
+
+.stop-button svg {
+  width: 20px;
+  height: 20px;
+}
+
+@media (prefers-color-scheme: light) {
+  .stop-button {
+    background: rgba(0, 0, 0, 0.08);
+    color: rgba(0, 0, 0, 0.5);
+  }
+
+  .stop-button:hover {
+    background: rgba(239, 68, 68, 0.8);
+    color: white;
+  }
 }
 
 /* Elapsed Time */
@@ -271,6 +427,44 @@
 
   .input-control button:hover {
     background: rgba(0, 0, 0, 0.12);
+    color: #000;
+  }
+}
+
+/* Skip Button */
+.skip-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 24px;
+  border-radius: 12px;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.skip-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.skip-button:active {
+  transform: scale(0.98);
+}
+
+@media (prefers-color-scheme: light) {
+  .skip-button {
+    background: rgba(0, 0, 0, 0.06);
+    color: rgba(0, 0, 0, 0.6);
+  }
+
+  .skip-button:hover {
+    background: rgba(0, 0, 0, 0.1);
     color: #000;
   }
 }

@@ -12,14 +12,14 @@ function getInitialSettings() {
     if (saved) {
       const { liftTime, chewTime } = JSON.parse(saved)
       return {
-        liftTime: typeof liftTime === 'number' ? liftTime : 5,
+        liftTime: typeof liftTime === 'number' ? liftTime : 20,
         chewTime: typeof chewTime === 'number' ? chewTime : 30,
       }
     }
   } catch {
     // ignore
   }
-  return { liftTime: 5, chewTime: 30 }
+  return { liftTime: 20, chewTime: 30 }
 }
 
 function App() {
@@ -27,6 +27,7 @@ function App() {
   const [liftTime, setLiftTime] = useState(initialSettings.liftTime)
   const [chewTime, setChewTime] = useState(initialSettings.chewTime)
   const [isRunning, setIsRunning] = useState(false)
+  const [isPaused, setIsPaused] = useState(false)
   const [currentPhase, setCurrentPhase] = useState<Phase>('idle')
   const [timeLeft, setTimeLeft] = useState(0)
   const [cycleCount, setCycleCount] = useState(0)
@@ -43,6 +44,7 @@ function App() {
 
   const startTimer = useCallback(() => {
     setIsRunning(true)
+    setIsPaused(false)
     setCurrentPhase('lift')
     setTimeLeft(liftTime)
     setCycleCount(1)
@@ -52,21 +54,54 @@ function App() {
 
   const stopTimer = useCallback(() => {
     setIsRunning(false)
+    setIsPaused(false)
     setCurrentPhase('idle')
     setTimeLeft(0)
     setCycleCount(0)
   }, [])
 
-  const toggleTimer = () => {
-    if (isRunning) {
-      stopTimer()
+  const pauseTimer = useCallback(() => {
+    setIsPaused(true)
+  }, [])
+
+  const resumeTimer = useCallback(() => {
+    setIsPaused(false)
+    lastTickRef.current = performance.now()
+  }, [])
+
+  const skipToNextPhase = useCallback(() => {
+    if (currentPhase === 'lift') {
+      setCurrentPhase('chew')
+      setTimeLeft(chewTime)
     } else {
+      setCurrentPhase('lift')
+      setTimeLeft(liftTime)
+      setCycleCount((c) => c + 1)
+    }
+    lastTickRef.current = performance.now()
+  }, [currentPhase, liftTime, chewTime])
+
+  const adjustTime = useCallback((delta: number) => {
+    setTimeLeft((prev) => Math.max(1, prev + delta))
+    if (currentPhase === 'lift') {
+      setLiftTime((prev) => Math.max(1, prev + delta))
+    } else if (currentPhase === 'chew') {
+      setChewTime((prev) => Math.max(1, prev + delta))
+    }
+  }, [currentPhase])
+
+  const togglePlayPause = () => {
+    if (!isRunning) {
       startTimer()
+    } else if (isPaused) {
+      resumeTimer()
+    } else {
+      pauseTimer()
     }
   }
 
   useEffect(() => {
-    if (!isRunning) return
+    if (!isRunning || isPaused) return
 
     const tick = () => {
       const now = performance.now()
@@ -93,7 +128,7 @@ function App() {
 
     const interval = setInterval(tick, TICK_INTERVAL)
     return () => clearInterval(interval)
-  }, [isRunning, currentPhase, liftTime, chewTime])
+  }, [isRunning, isPaused, currentPhase, liftTime, chewTime])
 
   const formatElapsedTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
@@ -109,15 +144,17 @@ function App() {
       case 'lift':
         return '口に運ぶ'
       case 'chew':
-        return '噛む'
+        return (<>噛んで<br />ゆっくり飲み込む</>)
       default:
         return 'スタンバイ'
     }
   }
 
+  const isFinishing = currentPhase === 'chew' && timeLeft <= 5 && timeLeft > 0
+
   return (
     <div className="app">
-      <div className={`timer-container ${currentPhase}`}>
+      <div className={`timer-container ${currentPhase}${isFinishing ? ' finishing' : ''}`}>
         {/* Circular Progress */}
         <div className="progress-ring-container">
           <svg className="progress-ring" viewBox="0 0 260 260">
@@ -140,10 +177,28 @@ function App() {
           </svg>
           <div className="timer-display">
             <span className="phase-label">{getPhaseLabel()}</span>
-            <span className="time-left">{isRunning ? Math.ceil(timeLeft) : '—'}</span>
+            <div className="time-adjust-row">
+              {isRunning && (
+                <button className="time-adjust-btn" onClick={() => adjustTime(-1)}>−</button>
+              )}
+              <span className="time-left">{isRunning ? Math.ceil(timeLeft) : '—'}</span>
+              {isRunning && (
+                <button className="time-adjust-btn" onClick={() => adjustTime(1)}>+</button>
+              )}
+            </div>
             {isRunning && <span className="cycle-count">cycle {cycleCount}</span>}
+            {isFinishing && <span className="finishing-message">もうすぐで食べ終わりです</span>}
           </div>
         </div>
+
+        {/* Current Settings */}
+        {isRunning && (
+          <div className="current-settings">
+            <span className="setting-item">口に運ぶ: {liftTime}s</span>
+            <span className="setting-divider">|</span>
+            <span className="setting-item">噛む: {chewTime}s</span>
+          </div>
+        )}
 
         {/* Elapsed Time */}
         {isRunning && (
@@ -166,7 +221,7 @@ function App() {
                 </div>
               </div>
               <div className="input-group">
-                <label>噛む</label>
+                <label>噛んで飲み込む</label>
                 <div className="input-control">
                   <button onClick={() => setChewTime(Math.max(1, chewTime - 1))}>−</button>
                   <span className="input-value">{chewTime}s</span>
@@ -176,18 +231,34 @@ function App() {
             </div>
           )}
 
-          <button className="play-button" onClick={toggleTimer}>
-            {isRunning ? (
-              <svg viewBox="0 0 24 24" fill="currentColor">
-                <rect x="6" y="4" width="4" height="16" rx="1" />
-                <rect x="14" y="4" width="4" height="16" rx="1" />
-              </svg>
-            ) : (
-              <svg viewBox="0 0 24 24" fill="currentColor">
-                <path d="M8 5v14l11-7z" />
-              </svg>
+          <div className="button-row">
+            <button className="play-button" onClick={togglePlayPause}>
+              {isRunning && !isPaused ? (
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <rect x="6" y="4" width="4" height="16" rx="1" />
+                  <rect x="14" y="4" width="4" height="16" rx="1" />
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              )}
+            </button>
+
+            {isRunning && (
+              <button className="stop-button" onClick={stopTimer}>
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <rect x="6" y="6" width="12" height="12" rx="1" />
+                </svg>
+              </button>
             )}
-          </button>
+          </div>
+
+          {isRunning && (
+            <button className="skip-button" onClick={skipToNextPhase}>
+              <span>{currentPhase === 'lift' ? (<>噛むへ<br />スキップする</>) : (<>口に運ぶへ<br />スキップする</>)}</span>
+            </button>
+          )}
         </div>
       </div>
     </div>

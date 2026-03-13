@@ -177,34 +177,36 @@ function App() {
           </svg>
           <div className="timer-display">
             <span className="phase-label">{getPhaseLabel()}</span>
-            <div className="time-adjust-row">
-              {isRunning && (
-                <button className="time-adjust-btn" onClick={() => adjustTime(-1)}>−</button>
-              )}
-              <span className="time-left">{isRunning ? Math.ceil(timeLeft) : '—'}</span>
-              {isRunning && (
-                <button className="time-adjust-btn" onClick={() => adjustTime(1)}>+</button>
-              )}
+            <div className="time-left">
+              {isRunning ? (
+                <>
+                  <span className="time-prefix">残り</span>
+                  <span className="time-value">{Math.ceil(timeLeft)}</span>
+                  <span className="time-suffix">秒</span>
+                </>
+              ) : '—'}
             </div>
             {isRunning && <span className="cycle-count">cycle {cycleCount}</span>}
             {isFinishing && <span className="finishing-message">もうすぐで食べ終わりです</span>}
           </div>
         </div>
 
-        {/* Current Settings */}
+        {/* Current Settings & Elapsed Time */}
         {isRunning && (
-          <div className="current-settings">
-            <span className="setting-item">口に運ぶ: {liftTime}s</span>
-            <span className="setting-divider">|</span>
-            <span className="setting-item">噛む: {chewTime}s</span>
-          </div>
-        )}
-
-        {/* Elapsed Time */}
-        {isRunning && (
-          <div className="elapsed-time">
-            <span className="elapsed-label">経過時間</span>
-            <span className="elapsed-value">{formatElapsedTime(elapsedTime)}</span>
+          <div className="status-bar">
+            <div className={`setting-row ${currentPhase === 'lift' ? 'active' : ''}`}>
+              {currentPhase === 'lift' && <button className="adjust-btn" onClick={() => adjustTime(-1)}>−</button>}
+              <span className="setting-label">運ぶ {liftTime}s</span>
+              {currentPhase === 'lift' && <button className="adjust-btn" onClick={() => adjustTime(1)}>+</button>}
+            </div>
+            <div className={`setting-row ${currentPhase === 'chew' ? 'active' : ''}`}>
+              {currentPhase === 'chew' && <button className="adjust-btn" onClick={() => adjustTime(-1)}>−</button>}
+              <span className="setting-label">噛む {chewTime}s</span>
+              {currentPhase === 'chew' && <button className="adjust-btn" onClick={() => adjustTime(1)}>+</button>}
+            </div>
+            <div className="elapsed-row">
+              <span className="elapsed-time">{formatElapsedTime(elapsedTime)}</span>
+            </div>
           </div>
         )}
 
@@ -245,7 +247,7 @@ function App() {
               )}
             </button>
 
-            {isRunning && (
+            {isPaused && (
               <button className="stop-button" onClick={stopTimer}>
                 <svg viewBox="0 0 24 24" fill="currentColor">
                   <rect x="6" y="6" width="12" height="12" rx="1" />
@@ -254,9 +256,9 @@ function App() {
             )}
           </div>
 
-          {isRunning && (
+          {isRunning && !isPaused && (
             <button className="skip-button" onClick={skipToNextPhase}>
-              <span>{currentPhase === 'lift' ? (<>噛むへ<br />スキップする</>) : (<>口に運ぶへ<br />スキップする</>)}</span>
+              <span>{currentPhase === 'lift' ? '噛むへスキップ' : '口に運ぶへスキップ'}</span>
             </button>
           )}
         </div>

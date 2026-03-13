@@ -10,15 +10,15 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 40px;
+  gap: 20px;
   transition: all 0.5s ease;
 }
 
 /* Progress Ring */
 .progress-ring-container {
   position: relative;
-  width: 260px;
-  height: 260px;
+  width: 220px;
+  height: 220px;
 }
 
 .progress-ring {
@@ -87,9 +87,9 @@
 }
 
 .finishing-message {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: #f59e0b;
-  margin-top: 8px;
+  margin-top: 4px;
   animation: pulse 1s ease-in-out infinite;
 }
 
@@ -106,26 +106,62 @@
 }
 
 .time-left {
-  font-size: 4rem;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 2px;
   font-weight: 200;
   line-height: 1;
-  font-variant-numeric: tabular-nums;
 }
 
-.time-adjust-row {
+.time-prefix,
+.time-suffix {
+  font-size: 0.9rem;
+  opacity: 0.6;
+  font-weight: 300;
+}
+
+.time-value {
+  font-size: 2.8rem;
+  font-variant-numeric: tabular-nums;
+  min-width: 2ch;
+  text-align: center;
+}
+
+/* Status Bar */
+.status-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.setting-row {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 8px;
+  min-height: 28px;
 }
 
-.time-adjust-btn {
-  width: 36px;
-  height: 36px;
+.setting-row.active {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.setting-label {
+  min-width: 70px;
+  text-align: center;
+}
+
+.adjust-btn {
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   border: none;
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 1.25rem;
+  background: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1rem;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
@@ -134,57 +170,40 @@
   padding: 0;
 }
 
-.time-adjust-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  color: #fff;
+.adjust-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
 }
 
-.time-adjust-btn:active {
-  transform: scale(0.9);
+.adjust-btn:active {
+  transform: scale(0.95);
+}
+
+.elapsed-row {
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.4);
 }
 
 @media (prefers-color-scheme: light) {
-  .time-adjust-btn {
-    background: rgba(0, 0, 0, 0.06);
+  .status-bar {
     color: rgba(0, 0, 0, 0.5);
   }
 
-  .time-adjust-btn:hover {
+  .setting-row.active {
+    color: rgba(0, 0, 0, 0.9);
+  }
+
+  .adjust-btn {
     background: rgba(0, 0, 0, 0.1);
-    color: #000;
-  }
-}
-
-/* Current Settings Display */
-.current-settings {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 8px 16px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
-  font-size: 0.8rem;
-}
-
-.setting-item {
-  color: rgba(255, 255, 255, 0.6);
-}
-
-.setting-divider {
-  color: rgba(255, 255, 255, 0.2);
-}
-
-@media (prefers-color-scheme: light) {
-  .current-settings {
-    background: rgba(0, 0, 0, 0.04);
+    color: rgba(0, 0, 0, 0.7);
   }
 
-  .setting-item {
-    color: rgba(0, 0, 0, 0.5);
+  .adjust-btn:hover {
+    background: rgba(0, 0, 0, 0.15);
   }
 
-  .setting-divider {
-    color: rgba(0, 0, 0, 0.2);
+  .elapsed-row {
+    color: rgba(0, 0, 0, 0.4);
   }
 }
 
@@ -199,12 +218,12 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 32px;
+  gap: 16px;
 }
 
 .time-inputs {
   display: flex;
-  gap: 32px;
+  gap: 24px;
 }
 
 .input-group {

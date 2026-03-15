@@ -212,6 +212,12 @@ function App() {
   return (
     <div className="app">
       <div className={`timer-container ${currentPhase}${isFinishing ? ' finishing' : ''}`}>
+        {isRunning && (
+          <div className="elapsed-row elapsed-row-top">
+            <span className="elapsed-time">{formatElapsedTime(elapsedTime)}</span>
+          </div>
+        )}
+
         {/* Circular Progress */}
         <div className="progress-ring-container">
           <svg className="progress-ring" viewBox="0 0 260 260">
@@ -260,9 +266,6 @@ function App() {
               <button className="adjust-btn" onClick={() => adjustTime('chew', -1)}>−</button>
               <span className="setting-label">噛む {chewTime}秒</span>
               <button className="adjust-btn" onClick={() => adjustTime('chew', 1)}>+</button>
-            </div>
-            <div className="elapsed-row">
-              <span className="elapsed-time">{formatElapsedTime(elapsedTime)}</span>
             </div>
           </div>
         )}

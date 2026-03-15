@@ -193,6 +193,21 @@
   color: rgba(255, 255, 255, 0.4);
 }
 
+.elapsed-row-top {
+  margin-top: 0;
+  margin-bottom: -4px;
+  text-align: center;
+}
+
+.elapsed-row-top .elapsed-time {
+  display: inline-block;
+  min-width: 5.5ch;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  font-variant-numeric: tabular-nums;
+}
+
 @media (prefers-color-scheme: light) {
   .status-bar {
     color: rgba(0, 0, 0, 0.5);
@@ -215,6 +230,10 @@
 
   .elapsed-row {
     color: rgba(0, 0, 0, 0.4);
+  }
+
+  .elapsed-row-top .elapsed-time {
+    background: rgba(0, 0, 0, 0.06);
   }
 }
 

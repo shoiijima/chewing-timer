@@ -5,6 +5,7 @@ type Phase = 'idle' | 'lift' | 'chew'
 
 const TICK_INTERVAL = 50 // ms for smooth animation
 const STORAGE_KEY = 'chewing-timer-settings'
+const STREAK_KEY = 'chewing-timer-streak'
 
 function getInitialSettings() {
   try {
@@ -22,8 +23,40 @@ function getInitialSettings() {
   return { liftTime: 20, chewTime: 30 }
 }
 
+function getDateString(date: Date = new Date()) {
+  return date.toISOString().split('T')[0]
+}
+
+function getStreakData() {
+  try {
+    const saved = localStorage.getItem(STREAK_KEY)
+    if (saved) {
+      const { lastDate, streak } = JSON.parse(saved)
+      const today = getDateString()
+      const yesterday = getDateString(new Date(Date.now() - 86400000))
+
+      if (lastDate === today) {
+        return { streak, isNewDay: false }
+      } else if (lastDate === yesterday) {
+        return { streak: streak + 1, isNewDay: true }
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return { streak: 1, isNewDay: true }
+}
+
+function saveStreakData(streak: number) {
+  localStorage.setItem(STREAK_KEY, JSON.stringify({
+    lastDate: getDateString(),
+    streak
+  }))
+}
+
 function App() {
   const initialSettings = getInitialSettings()
+  const initialStreak = getStreakData()
   const [liftTime, setLiftTime] = useState(initialSettings.liftTime)
   const [chewTime, setChewTime] = useState(initialSettings.chewTime)
   const [isRunning, setIsRunning] = useState(false)
@@ -32,6 +65,9 @@ function App() {
   const [timeLeft, setTimeLeft] = useState(0)
   const [cycleCount, setCycleCount] = useState(0)
   const [elapsedTime, setElapsedTime] = useState(0)
+  const [streakCount, setStreakCount] = useState(initialStreak.streak)
+  const [showResult, setShowResult] = useState(false)
+  const [finalElapsedTime, setFinalElapsedTime] = useState(0)
   const lastTickRef = useRef<number>(0)
 
   // 設定値をlocalStorageに保存
@@ -43,21 +79,31 @@ function App() {
   const progress = totalTime > 0 ? ((totalTime - timeLeft) / totalTime) * 100 : 0
 
   const startTimer = useCallback(() => {
+    // 連続日数を更新して保存
+    saveStreakData(streakCount)
+
     setIsRunning(true)
     setIsPaused(false)
     setCurrentPhase('lift')
     setTimeLeft(liftTime)
     setCycleCount(1)
     setElapsedTime(0)
+    setShowResult(false)
     lastTickRef.current = performance.now()
-  }, [liftTime])
+  }, [liftTime, streakCount])
 
   const stopTimer = useCallback(() => {
+    setFinalElapsedTime(elapsedTime)
+    setShowResult(true)
     setIsRunning(false)
     setIsPaused(false)
     setCurrentPhase('idle')
     setTimeLeft(0)
     setCycleCount(0)
+  }, [elapsedTime])
+
+  const closeResult = useCallback(() => {
+    setShowResult(false)
   }, [])
 
   const pauseTimer = useCallback(() => {
@@ -81,14 +127,21 @@ function App() {
     lastTickRef.current = performance.now()
   }, [currentPhase, liftTime, chewTime])
 
-  const adjustTime = useCallback((delta: number) => {
-    setTimeLeft((prev) => Math.max(1, prev + delta))
-    if (currentPhase === 'lift') {
-      setLiftTime((prev) => Math.max(1, prev + delta))
-    } else if (currentPhase === 'chew') {
-      setChewTime((prev) => Math.max(1, prev + delta))
+  const adjustTime = useCallback((target: 'lift' | 'chew', delta: number) => {
+    if (target === 'lift') {
+      const newValue = Math.max(1, liftTime + delta)
+      setLiftTime(newValue)
+      if (currentPhase === 'lift') {
+        setTimeLeft((prev) => Math.max(1, prev + delta))
+      }
+    } else {
+      const newValue = Math.max(1, chewTime + delta)
+      setChewTime(newValue)
+      if (currentPhase === 'chew') {
+        setTimeLeft((prev) => Math.max(1, prev + delta))
+      }
     }
-  }, [currentPhase])
+  }, [currentPhase, liftTime, chewTime])
 
   const togglePlayPause = () => {
     if (!isRunning) {
@@ -134,6 +187,15 @@ function App() {
     const mins = Math.floor(seconds / 60)
     const secs = Math.floor(seconds % 60)
     return `${mins}:${secs.toString().padStart(2, '0')}`
+  }
+
+  const formatElapsedTimeJapanese = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = Math.floor(seconds % 60)
+    if (mins > 0) {
+      return `${mins}分${secs}秒`
+    }
+    return `${secs}秒`
   }
 
   const circumference = 2 * Math.PI * 120
@@ -186,7 +248,7 @@ function App() {
                 </>
               ) : '—'}
             </div>
-            {isRunning && <span className="cycle-count">cycle {cycleCount}</span>}
+            {/* {isRunning && <span className="cycle-count">cycle {cycleCount}</span>} */}
             {isFinishing && <span className="finishing-message">もうすぐで食べ終わりです</span>}
           </div>
         </div>
@@ -195,14 +257,14 @@ function App() {
         {isRunning && (
           <div className="status-bar">
             <div className={`setting-row ${currentPhase === 'lift' ? 'active' : ''}`}>
-              {currentPhase === 'lift' && <button className="adjust-btn" onClick={() => adjustTime(-1)}>−</button>}
-              <span className="setting-label">運ぶ {liftTime}s</span>
-              {currentPhase === 'lift' && <button className="adjust-btn" onClick={() => adjustTime(1)}>+</button>}
+              <button className="adjust-btn" onClick={() => adjustTime('lift', -1)}>−</button>
+              <span className="setting-label">運ぶ {liftTime}秒</span>
+              <button className="adjust-btn" onClick={() => adjustTime('lift', 1)}>+</button>
             </div>
             <div className={`setting-row ${currentPhase === 'chew' ? 'active' : ''}`}>
-              {currentPhase === 'chew' && <button className="adjust-btn" onClick={() => adjustTime(-1)}>−</button>}
-              <span className="setting-label">噛む {chewTime}s</span>
-              {currentPhase === 'chew' && <button className="adjust-btn" onClick={() => adjustTime(1)}>+</button>}
+              <button className="adjust-btn" onClick={() => adjustTime('chew', -1)}>−</button>
+              <span className="setting-label">噛む {chewTime}秒</span>
+              <button className="adjust-btn" onClick={() => adjustTime('chew', 1)}>+</button>
             </div>
             <div className="elapsed-row">
               <span className="elapsed-time">{formatElapsedTime(elapsedTime)}</span>
@@ -213,24 +275,31 @@ function App() {
         {/* Controls */}
         <div className="controls">
           {!isRunning && (
-            <div className="time-inputs">
-              <div className="input-group">
-                <label>口に運ぶ</label>
-                <div className="input-control">
-                  <button onClick={() => setLiftTime(Math.max(1, liftTime - 1))}>−</button>
-                  <span className="input-value">{liftTime}s</span>
-                  <button onClick={() => setLiftTime(liftTime + 1)}>+</button>
+            <>
+              {streakCount >= 2 && (
+                <div className="streak-message">
+                  🔥 本日連続{streakCount}日目です！
+                </div>
+              )}
+              <div className="time-inputs">
+                <div className="input-group">
+                  <label>口に運ぶ</label>
+                  <div className="input-control">
+                    <button onClick={() => setLiftTime(Math.max(1, liftTime - 1))}>−</button>
+                    <span className="input-value">{liftTime}s</span>
+                    <button onClick={() => setLiftTime(liftTime + 1)}>+</button>
+                  </div>
+                </div>
+                <div className="input-group">
+                  <label>噛んで飲み込む</label>
+                  <div className="input-control">
+                    <button onClick={() => setChewTime(Math.max(1, chewTime - 1))}>−</button>
+                    <span className="input-value">{chewTime}s</span>
+                    <button onClick={() => setChewTime(chewTime + 1)}>+</button>
+                  </div>
                 </div>
               </div>
-              <div className="input-group">
-                <label>噛んで飲み込む</label>
-                <div className="input-control">
-                  <button onClick={() => setChewTime(Math.max(1, chewTime - 1))}>−</button>
-                  <span className="input-value">{chewTime}s</span>
-                  <button onClick={() => setChewTime(chewTime + 1)}>+</button>
-                </div>
-              </div>
-            </div>
+            </>
           )}
 
           <div className="button-row">
@@ -263,6 +332,26 @@ function App() {
           )}
         </div>
       </div>
+
+      {/* Result Modal */}
+      {showResult && (
+        <div className="result-overlay">
+          <div className="result-modal">
+            <div className="result-time">
+              <span className="result-label">今回かかった時間</span>
+              <span className="result-value">{formatElapsedTimeJapanese(finalElapsedTime)}</span>
+            </div>
+            {streakCount >= 2 && (
+              <div className="result-streak">
+                🔥 連続{streakCount}日目！
+              </div>
+            )}
+            <button className="close-btn" onClick={closeResult}>
+              閉じる
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

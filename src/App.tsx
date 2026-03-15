@@ -63,9 +63,8 @@ function App() {
   const [isPaused, setIsPaused] = useState(false)
   const [currentPhase, setCurrentPhase] = useState<Phase>('idle')
   const [timeLeft, setTimeLeft] = useState(0)
-  const [cycleCount, setCycleCount] = useState(0)
   const [elapsedTime, setElapsedTime] = useState(0)
-  const [streakCount, setStreakCount] = useState(initialStreak.streak)
+  const [streakCount] = useState(initialStreak.streak)
   const [showResult, setShowResult] = useState(false)
   const [finalElapsedTime, setFinalElapsedTime] = useState(0)
   const lastTickRef = useRef<number>(0)
@@ -86,7 +85,6 @@ function App() {
     setIsPaused(false)
     setCurrentPhase('lift')
     setTimeLeft(liftTime)
-    setCycleCount(1)
     setElapsedTime(0)
     setShowResult(false)
     lastTickRef.current = performance.now()
@@ -99,7 +97,6 @@ function App() {
     setIsPaused(false)
     setCurrentPhase('idle')
     setTimeLeft(0)
-    setCycleCount(0)
   }, [elapsedTime])
 
   const closeResult = useCallback(() => {
@@ -122,7 +119,6 @@ function App() {
     } else {
       setCurrentPhase('lift')
       setTimeLeft(liftTime)
-      setCycleCount((c) => c + 1)
     }
     lastTickRef.current = performance.now()
   }, [currentPhase, liftTime, chewTime])
@@ -171,7 +167,6 @@ function App() {
             return chewTime + newTime // carry over the negative for accuracy
           } else {
             setCurrentPhase('lift')
-            setCycleCount((c) => c + 1)
             return liftTime + newTime
           }
         }
